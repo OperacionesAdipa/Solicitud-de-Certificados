@@ -27,47 +27,60 @@
 <script>
 const WEBHOOK_MAKE = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
 
-function buscarCursos() {
-  const email = document.getElementById("email").value;
-  const select = document.getElementById("cursos");
+async function buscarCursos() {
+  const email = document.getElementById("email").value.trim();
+  const select = document.getElementById("courses");
 
-  if (!email) {
-    alert("Ingresa un correo");
-    return;
-  }
+  select.innerHTML = "<option>Cargando...</option>";
 
-  console.log("Enviando correo a Make:", email);
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
+    });
 
-  select.innerHTML = "<option>Buscando cursos...</option>";
+    const rawText = await response.text();
 
-  fetch(WEBHOOK_MAKE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: email })
-  })
-  .then(response => {
-    console.log("Respuesta recibida", response);
-    return response.json();
-  })
-  .then(data => {
-    console.log("Datos:", data);
+    console.log("⬇ RESPUESTA CRUDA DEL WEBHOOK ⬇");
+    console.log(rawText);
+
+    if (!rawText) {
+      select.innerHTML = "<option>Respuesta vacía</option>";
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      console.error("❌ Error parseando JSON", e);
+      select.innerHTML = "<option>Error de formato</option>";
+      return;
+    }
+
+    console.log("✅ JSON PARSEADO", data);
+
     select.innerHTML = "";
 
-    if (data.cursos && data.cursos.length > 0) {
-      data.cursos.forEach(curso => {
-        const opt = document.createElement("option");
-        opt.value = curso;
-        opt.textContent = curso;
-        select.appendChild(opt);
-      });
-    } else {
+    if (!data.courses || data.courses.length === 0) {
       select.innerHTML = "<option>No se encontraron cursos</option>";
+      return;
     }
-  })
-  .catch(error => {
-    console.error("Error:", error);
-    select.innerHTML = "<option>Error al consultar</option>";
-  });
+
+    data.courses.forEach(curso => {
+      const opt = document.createElement("option");
+      opt.value = curso.fullname;
+      opt.textContent = curso.fullname;
+      select.appendChild(opt);
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetch", error);
+    select.innerHTML = "<option>Error de conexión</option>";
+  }
 }
 </script>
 
