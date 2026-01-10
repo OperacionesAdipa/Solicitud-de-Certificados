@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Consulta de Cursos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<h2>Consulta de Cursos</h2>
+
+<label>Correo electrónico</label><br>
+<input type="email" id="email" placeholder="correo@ejemplo.com">
+<br><br>
+
+<label>Cursos inscritos</label><br>
+<select id="cursos">
+  <option>Ingresa tu correo</option>
+</select>
+
+<script>
+const WEBHOOK_MAKE = "PEGA_AQUI_TU_WEBHOOK";
+
+document.getElementById("email").addEventListener("blur", buscarCursos);
+
+function buscarCursos() {
+  const email = document.getElementById("email").value;
+  if (!email) return;
+
+  const select = document.getElementById("cursos");
+  select.innerHTML = "<option>Buscando cursos...</option>";
+
+  fetch(WEBHOOK_MAKE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  })
+  .then(r => r.json())
+  .then(data => {
+    select.innerHTML = "";
+    if (data.cursos && data.cursos.length) {
+      data.cursos.forEach(curso => {
+        const opt = document.createElement("option");
+        opt.value = curso;
+        opt.textContent = curso;
+        select.appendChild(opt);
+      });
+    } else {
+      select.innerHTML = "<option>No se encontraron cursos</option>";
+    }
+  })
+  .catch(() => {
+    select.innerHTML = "<option>Error al consultar</option>";
+  });
+}
+</script>
+
+</body>
+</html>
