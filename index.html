@@ -3,104 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <title>Solicitud de Certificado</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    .container {
+      max-width: 420px;
+      margin: auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background-color: #5a2dcc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+    .mensaje {
+      margin-top: 15px;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="container">
+    <h1>Solicitud de Certificado</h1>
 
-<section class="section">
-  <div class="container" style="max-width: 600px;">
-    <h1 class="title">Solicitud de Certificado</h1>
+    <!-- CORREO -->
+    <label for="email">Correo electrónico</label>
+    <input type="email" id="email" placeholder="tu@correo.com" required>
 
-    <!-- EMAIL -->
-    <div class="field">
-      <label class="label">Correo electrónico</label>
-      <div class="control">
-        <input
-          class="input"
-          type="email"
-          id="email"
-          placeholder="tu@correo.com"
-          required
-        >
-      </div>
-    </div>
+    <!-- TIPO DE CERTIFICADO -->
+    <label for="tipoCertificado">Tipo de certificado</label>
+    <select id="tipoCertificado" required>
+      <option value="">-- Selecciona una opción --</option>
+      <option value="certificado_alumno_regular">Certificado de alumno regular</option>
+      <option value="certificado_participacion">Certificado de participación</option>
+      <option value="certificado_inscripcion">Certificado de inscripción</option>
+    </select>
 
     <!-- BOTÓN -->
-    <div class="field">
-      <button class="button is-primary" onclick="buscarCursos()">
-        Buscar mis programas
-      </button>
+    <button id="btnBuscar" onclick="buscarProgramas()">Buscar mis programas</button>
+
+    <!-- SELECT DE CURSOS -->
+    <div id="contenedorCursos" style="display:none;">
+      <label for="curso">Programa</label>
+      <select id="curso"></select>
     </div>
 
-    <!-- MENSAJE -->
-    <p id="estado" class="has-text-grey mb-3"></p>
-
-    <!-- SELECT -->
-    <div class="field" id="bloqueCursos" style="display:none;">
-      <label class="label">Programas inscritos</label>
-      <div class="control">
-        <div class="select is-fullwidth">
-          <select id="listaCursos"></select>
-        </div>
-      </div>
-    </div>
+    <div class="mensaje" id="mensaje"></div>
   </div>
-</section>
 
-<script>
-const WEBHOOK_URL = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
+  <script>
+    const WEBHOOK_URL = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
 
-async function buscarCursos() {
-  const email = document.getElementById("email").value.trim();
-  const estado = document.getElementById("estado");
-  const select = document.getElementById("listaCursos");
-  const bloque = document.getElementById("bloqueCursos");
+    async function buscarProgramas() {
+      const email = document.getElementById("email").value.trim();
+      const tipoCertificado = document.getElementById("tipoCertificado").value;
+      const mensaje = document.getElementById("mensaje");
+      const boton = document.getElementById("btnBuscar");
 
-  if (!email) {
-    alert("Ingresa un correo válido");
-    return;
-  }
+      if (!email || !tipoCertificado) {
+        mensaje.textContent = "Debes ingresar el correo y seleccionar el tipo de certificado.";
+        mensaje.style.color = "red";
+        return;
+      }
 
-  estado.textContent = "Buscando programas...";
-  bloque.style.display = "none";
-  select.innerHTML = "";
+      mensaje.textContent = "Buscando programas...";
+      mensaje.style.color = "black";
+      boton.disabled = true;
 
-  try {
-    const response = await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email: email })
-    });
+      try {
+        const response = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email,
+            tipo_certificado: tipoCertificado
+          })
+        });
 
-    if (!response.ok) {
-      throw new Error("Error HTTP");
+        const cursos = await response.json();
+
+        if (!Array.isArray(cursos) || cursos.length === 0) {
+          throw new Error("No se encontraron cursos");
+        }
+
+        const selectCursos = document.getElementById("curso");
+        selectCursos.innerHTML = "";
+
+        cursos.forEach(curso => {
+          const option = document.createElement("option");
+          option.value = curso;
+          option.textContent = curso;
+          selectCursos.appendChild(option);
+        });
+
+        document.getElementById("contenedorCursos").style.display = "block";
+        mensaje.textContent = "Selecciona el programa para continuar.";
+        mensaje.style.color = "green";
+
+      } catch (error) {
+        mensaje.textContent = "Ocurrió un error. Intenta nuevamente.";
+        mensaje.style.color = "red";
+        console.error(error);
+      } finally {
+        boton.disabled = false;
+      }
     }
-
-    const cursos = await response.json();
-
-    if (!Array.isArray(cursos) || cursos.length === 0) {
-      estado.textContent = "No se encontraron programas asociados a este correo.";
-      return;
-    }
-
-    cursos.forEach(curso => {
-      const option = document.createElement("option");
-      option.value = curso;
-      option.textContent = curso;
-      select.appendChild(option);
-    });
-
-    bloque.style.display = "block";
-    estado.textContent = "Selecciona el programa para solicitar tu certificado.";
-
-  } catch (error) {
-    console.error(error);
-    estado.textContent = "Error al obtener los programas. Intenta nuevamente.";
-  }
-}
-</script>
-
+  </script>
 </body>
 </html>
