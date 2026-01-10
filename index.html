@@ -13,32 +13,45 @@
 <input type="email" id="email" placeholder="correo@ejemplo.com">
 <br><br>
 
+<button onclick="buscarCursos()">Buscar cursos</button>
+
+<br><br>
+
 <label>Cursos inscritos</label><br>
 <select id="cursos">
-  <option>Ingresa tu correo</option>
+  <option>—</option>
 </select>
 
 <script>
 const WEBHOOK_MAKE = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
 
-document.getElementById("email").addEventListener("blur", buscarCursos);
-
 function buscarCursos() {
   const email = document.getElementById("email").value;
-  if (!email) return;
-
   const select = document.getElementById("cursos");
+
+  if (!email) {
+    alert("Ingresa un correo");
+    return;
+  }
+
+  console.log("Enviando correo a Make:", email);
+
   select.innerHTML = "<option>Buscando cursos...</option>";
 
   fetch(WEBHOOK_MAKE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
+    body: JSON.stringify({ email: email })
   })
-  .then(r => r.json())
+  .then(response => {
+    console.log("Respuesta recibida", response);
+    return response.json();
+  })
   .then(data => {
+    console.log("Datos:", data);
     select.innerHTML = "";
-    if (data.cursos && data.cursos.length) {
+
+    if (data.cursos && data.cursos.length > 0) {
       data.cursos.forEach(curso => {
         const opt = document.createElement("option");
         opt.value = curso;
@@ -49,7 +62,8 @@ function buscarCursos() {
       select.innerHTML = "<option>No se encontraron cursos</option>";
     }
   })
-  .catch(() => {
+  .catch(error => {
+    console.error("Error:", error);
     select.innerHTML = "<option>Error al consultar</option>";
   });
 }
