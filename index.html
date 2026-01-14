@@ -51,7 +51,7 @@
       border-color: #704EFD;
       box-shadow: 0 0 5px rgba(112, 78, 253, 0.2);
     }
-    #nombreEdicion {
+    #nombreEdicion, #rutEdicion {
       border: 1.5px solid #704EFD;
       background-color: #f0edff;
       font-weight: 500;
@@ -145,13 +145,16 @@
       <label for="nombreEdicion">Nombre completo (Verifica o edita para tu certificado)</label>
       <input type="text" id="nombreEdicion" placeholder="Tu nombre completo">
 
+      <label for="rutEdicion" style="margin-top: 15px;">RUT (Verifica o edita para tu certificado)</label>
+      <input type="text" id="rutEdicion" placeholder="Tu RUT">
+
       <label for="curso" style="margin-top: 15px;">Selecciona tu Programa</label>
       <select id="curso"></select>
 
       <div class="checkbox-container">
         <input type="checkbox" id="terminos" onchange="validarCheckbox()">
         <label for="terminos">
-          Acepto los términos y condiciones. Confirmo que mi nombre y programa seleccionados son correctos para la emisión del certificado.
+          Acepto los términos y condiciones. Confirmo que mi nombre, RUT y programa seleccionados son correctos para la emisión del certificado.
         </label>
       </div>
 
@@ -193,26 +196,24 @@
           body: JSON.stringify({ email: email, tipo_certificado: tipoCertificado })
         });
 
-        // Cambio crítico aquí: Parsear la respuesta
         const data = await response.json(); 
 
-        // Lógica para asegurar que los cursos se traten como una lista individual
         let listaCursos = [];
-        
         if (data.cursos) {
-            // Si Make envía un array dentro de un string o un array real, lo procesamos
             listaCursos = Array.isArray(data.cursos) ? data.cursos : data.cursos.split(',').map(c => c.trim().replace(/[\[\]"']/g, ""));
         }
 
         if (listaCursos.length === 0) throw new Error();
 
+        // Rellenar Nombre y RUT
         document.getElementById("nombreEdicion").value = data.nombre_estudiante || "";
+        document.getElementById("rutEdicion").value = data.rut || "";
         
         const selectCursos = document.getElementById("curso");
-        selectCursos.innerHTML = ""; // Limpiar antes de llenar
+        selectCursos.innerHTML = "";
         
         listaCursos.forEach(c => {
-          if(c) { // Evitar opciones vacías
+          if(c) {
             let opt = document.createElement("option");
             opt.value = c; 
             opt.textContent = c;
@@ -239,14 +240,16 @@
       const mensaje = document.getElementById("mensaje");
       const btnFinal = document.getElementById("btnEnviarFinal");
       const nombreFinal = document.getElementById("nombreEdicion").value.trim();
+      const rutFinal = document.getElementById("rutEdicion").value.trim();
 
-      if (!nombreFinal) {
-        alert("El nombre es obligatorio para el certificado.");
+      if (!nombreFinal || !rutFinal) {
+        alert("El nombre y el RUT son obligatorios para el certificado.");
         return;
       }
 
       const payload = {
         nombre_usuario: nombreFinal,
+        rut_usuario: rutFinal,
         email: document.getElementById("email").value.trim(),
         tipo_certificado: document.getElementById("tipoCertificado").value,
         programa: document.getElementById("curso").value,
