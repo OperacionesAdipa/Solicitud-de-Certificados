@@ -51,7 +51,6 @@
       border-color: #704EFD;
       box-shadow: 0 0 5px rgba(112, 78, 253, 0.2);
     }
-    /* Estilo para resaltar que el nombre es editable */
     #nombreEdicion {
       border: 1.5px solid #704EFD;
       background-color: #f0edff;
@@ -101,7 +100,6 @@
       text-align: center;
       font-weight: 500;
     }
-    /* Botón flotante WhatsApp */
     .btn-whatsapp {
       position: fixed;
       bottom: 25px;
@@ -170,9 +168,8 @@
 
   <script>
     const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
-    const WEBHOOK_ENVIAR = "AQUÍ_TU_NUEVA_URL_DE_MAKE"; // <-- REEMPLAZAR
+    const WEBHOOK_ENVIAR = "https://hook.us2.make.com/s8mg9f4mq5n8p25skgb42cyqcpdsmur4"; 
 
-    // 1. Buscar programas y nombre
     async function buscarProgramas() {
       const email = document.getElementById("email").value.trim();
       const tipoCertificado = document.getElementById("tipoCertificado").value;
@@ -180,12 +177,12 @@
       const boton = document.getElementById("btnBuscar");
 
       if (!email || !tipoCertificado) {
-        mensaje.textContent = "Por favor, completa los datos iniciales.";
+        mensaje.textContent = "Por favor, completa el correo y el tipo de certificado.";
         mensaje.style.color = "red";
         return;
       }
 
-      mensaje.textContent = "Buscando en Moodle...";
+      mensaje.textContent = "Buscando tus inscripciones...";
       mensaje.style.color = "#666";
       boton.disabled = true;
 
@@ -198,21 +195,30 @@
 
         const data = await response.json(); 
 
-        if (!data.cursos || data.cursos.length === 0) throw new Error();
+        // SECCIÓN CORREGIDA: Normalización de la lista de cursos
+        let listaCursos = [];
+        if (Array.isArray(data.cursos)) {
+          listaCursos = data.cursos;
+        } else if (typeof data.cursos === 'string') {
+          listaCursos = data.cursos.split(',').map(c => c.trim());
+        }
 
-        // Rellenar nombre editable y cursos
+        if (listaCursos.length === 0) throw new Error();
+
+        // Rellenar nombre
         document.getElementById("nombreEdicion").value = data.nombre_estudiante || "";
         
+        // Rellenar select de cursos
         const selectCursos = document.getElementById("curso");
         selectCursos.innerHTML = "";
-        data.cursos.forEach(c => {
+        listaCursos.forEach(c => {
           let opt = document.createElement("option");
           opt.value = c; opt.textContent = c;
           selectCursos.appendChild(opt);
         });
 
         document.getElementById("contenedorCursos").style.display = "block";
-        mensaje.textContent = "Datos recuperados con éxito.";
+        mensaje.textContent = "¡Programas encontrados! Selecciona uno para continuar.";
         mensaje.style.color = "green";
 
       } catch (e) {
@@ -221,13 +227,11 @@
       } finally { boton.disabled = false; }
     }
 
-    // 2. Controlar botón final
     function validarCheckbox() {
       const check = document.getElementById("terminos");
       document.getElementById("btnEnviarFinal").disabled = !check.checked;
     }
 
-    // 3. Envío definitivo
     async function enviarSolicitudFinal() {
       const mensaje = document.getElementById("mensaje");
       const btnFinal = document.getElementById("btnEnviarFinal");
@@ -257,7 +261,7 @@
         });
 
         if (res.ok) {
-          mensaje.innerHTML = "<strong>¡Solicitud enviada!</strong> Te avisaremos por correo.";
+          mensaje.innerHTML = "<strong>¡Solicitud enviada!</strong> <br>Procesaremos tu certificado y te contactaremos por correo.";
           mensaje.style.color = "green";
           document.getElementById("contenedorCursos").style.display = "none";
         } else { throw new Error(); }
