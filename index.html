@@ -195,12 +195,16 @@
 
         const data = await response.json(); 
 
-        // SECCIÓN CORREGIDA: Normalización de la lista de cursos
+        // SECCIÓN CORREGIDA: Normalización reforzada de la lista de cursos
         let listaCursos = [];
-        if (Array.isArray(data.cursos)) {
-          listaCursos = data.cursos;
-        } else if (typeof data.cursos === 'string') {
-          listaCursos = data.cursos.split(',').map(c => c.trim());
+        let cursosRaw = data.cursos;
+
+        if (Array.isArray(cursosRaw)) {
+          listaCursos = cursosRaw;
+        } else if (typeof cursosRaw === 'string') {
+          // Limpia formatos como ["Curso 1", "Curso 2"] y separa por comas
+          let limpio = cursosRaw.replace(/[\[\]"']/g, "");
+          listaCursos = limpio.split(',').map(c => c.trim()).filter(c => c !== "");
         }
 
         if (listaCursos.length === 0) throw new Error();
