@@ -193,32 +193,31 @@
           body: JSON.stringify({ email: email, tipo_certificado: tipoCertificado })
         });
 
+        // Cambio crítico aquí: Parsear la respuesta
         const data = await response.json(); 
 
-        // SECCIÓN CORREGIDA: Normalización reforzada de la lista de cursos
+        // Lógica para asegurar que los cursos se traten como una lista individual
         let listaCursos = [];
-        let cursosRaw = data.cursos;
-
-        if (Array.isArray(cursosRaw)) {
-          listaCursos = cursosRaw;
-        } else if (typeof cursosRaw === 'string') {
-          // Limpia formatos como ["Curso 1", "Curso 2"] y separa por comas
-          let limpio = cursosRaw.replace(/[\[\]"']/g, "");
-          listaCursos = limpio.split(',').map(c => c.trim()).filter(c => c !== "");
+        
+        if (data.cursos) {
+            // Si Make envía un array dentro de un string o un array real, lo procesamos
+            listaCursos = Array.isArray(data.cursos) ? data.cursos : data.cursos.split(',').map(c => c.trim().replace(/[\[\]"']/g, ""));
         }
 
         if (listaCursos.length === 0) throw new Error();
 
-        // Rellenar nombre
         document.getElementById("nombreEdicion").value = data.nombre_estudiante || "";
         
-        // Rellenar select de cursos
         const selectCursos = document.getElementById("curso");
-        selectCursos.innerHTML = "";
+        selectCursos.innerHTML = ""; // Limpiar antes de llenar
+        
         listaCursos.forEach(c => {
-          let opt = document.createElement("option");
-          opt.value = c; opt.textContent = c;
-          selectCursos.appendChild(opt);
+          if(c) { // Evitar opciones vacías
+            let opt = document.createElement("option");
+            opt.value = c; 
+            opt.textContent = c;
+            selectCursos.appendChild(opt);
+          }
         });
 
         document.getElementById("contenedorCursos").style.display = "block";
