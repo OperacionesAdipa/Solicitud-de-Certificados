@@ -19,6 +19,11 @@
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
+    img.logo {
+      width: 160px;
+      display: block;
+      margin: 0 auto 25px;
+    }
     h1 {
       font-size: 22px;
       margin-bottom: 25px;
@@ -46,7 +51,12 @@
       border-color: #704EFD;
       box-shadow: 0 0 5px rgba(112, 78, 253, 0.2);
     }
-    /* Estilos para la sección de términos */
+    /* Estilo para resaltar que el nombre es editable */
+    #nombreEdicion {
+      border: 1.5px solid #704EFD;
+      background-color: #f0edff;
+      font-weight: 500;
+    }
     .checkbox-container {
       display: flex;
       align-items: flex-start;
@@ -69,7 +79,6 @@
       line-height: 1.4;
       cursor: pointer;
     }
-    /* Botones */
     button {
       background-color: #704EFD;
       color: white;
@@ -92,8 +101,7 @@
       text-align: center;
       font-weight: 500;
     }
-
-    /* Botón flotante de WhatsApp */
+    /* Botón flotante WhatsApp */
     .btn-whatsapp {
       position: fixed;
       bottom: 25px;
@@ -101,7 +109,6 @@
       width: 60px;
       height: 60px;
       background-color: #25d366;
-      color: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -110,19 +117,14 @@
       z-index: 9999;
       transition: transform 0.3s ease;
     }
-    .btn-whatsapp:hover {
-      transform: scale(1.1);
-    }
-    .btn-whatsapp img {
-      width: 35px;
-      height: 35px;
-    }
+    .btn-whatsapp:hover { transform: scale(1.1); }
+    .btn-whatsapp img { width: 35px; height: 35px; }
   </style>
 </head>
 
 <body>
 
-  <img src="https://aula.adipa.cl/pluginfile.php/1/theme_mb2nl/logo/1732710878/LOGOADIPA%202%20%283%29%20%281%29.png" alt="Logo de ADIPA" style="width: 160px; display: block; margin: 0 auto 25px;">
+  <img src="https://aula.adipa.cl/pluginfile.php/1/theme_mb2nl/logo/1732710878/LOGOADIPA%202%20%283%29%20%281%29.png" alt="Logo de ADIPA" class="logo">
 
   <div class="container">
     <h1>Solicitud de Certificado</h1>
@@ -141,13 +143,17 @@
     <button id="btnBuscar" onclick="buscarProgramas()">Buscar mis programas</button>
 
     <div id="contenedorCursos" style="display:none; margin-top: 30px; border-top: 2px solid #eee; padding-top: 10px;">
-      <label for="curso">Selecciona tu Programa</label>
+      
+      <label for="nombreEdicion">Nombre completo (Verifica o edita para tu certificado)</label>
+      <input type="text" id="nombreEdicion" placeholder="Tu nombre completo">
+
+      <label for="curso" style="margin-top: 15px;">Selecciona tu Programa</label>
       <select id="curso"></select>
 
       <div class="checkbox-container">
         <input type="checkbox" id="terminos" onchange="validarCheckbox()">
         <label for="terminos">
-          Acepto los términos y condiciones para la generación de certificados personalizados y confirmo que los datos ingresados son correctos.
+          Acepto los términos y condiciones. Confirmo que mi nombre y programa seleccionados son correctos para la emisión del certificado.
         </label>
       </div>
 
@@ -157,17 +163,16 @@
     <div class="mensaje" id="mensaje"></div>
   </div>
 
-  <a href="https://api.whatsapp.com/send?phone=56957253424&text=Hola%2C%20necesito%20ayuda%20con%20mi%20certificado%20personalizado" 
-     class="btn-whatsapp" 
-     target="_blank">
+  <a href="https://wa.me/569XXXXXXXX?text=Hola,%20necesito%20ayuda%20con%20el%20formulario%20de%20certificados" 
+     class="btn-whatsapp" target="_blank">
     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
   </a>
 
   <script>
     const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
-    const WEBHOOK_ENVIAR = "https://hook.us2.make.com/s8mg9f4mq5n8p25skgb42cyqcpdsmur4"; // Reemplazar por tu segundo webhook
+    const WEBHOOK_ENVIAR = "AQUÍ_TU_NUEVA_URL_DE_MAKE"; // <-- REEMPLAZAR
 
-    // 1. Lógica para buscar programas en Moodle vía Make
+    // 1. Buscar programas y nombre
     async function buscarProgramas() {
       const email = document.getElementById("email").value.trim();
       const tipoCertificado = document.getElementById("tipoCertificado").value;
@@ -175,12 +180,12 @@
       const boton = document.getElementById("btnBuscar");
 
       if (!email || !tipoCertificado) {
-        mensaje.textContent = "Por favor, completa el correo y el tipo de certificado.";
+        mensaje.textContent = "Por favor, completa los datos iniciales.";
         mensaje.style.color = "red";
         return;
       }
 
-      mensaje.textContent = "Buscando tus inscripciones...";
+      mensaje.textContent = "Buscando en Moodle...";
       mensaje.style.color = "#666";
       boton.disabled = true;
 
@@ -191,73 +196,73 @@
           body: JSON.stringify({ email: email, tipo_certificado: tipoCertificado })
         });
 
-        const cursos = await response.json();
+        const data = await response.json(); 
 
-        if (!Array.isArray(cursos) || cursos.length === 0) {
-          throw new Error("Sin resultados");
-        }
+        if (!data.cursos || data.cursos.length === 0) throw new Error();
 
+        // Rellenar nombre editable y cursos
+        document.getElementById("nombreEdicion").value = data.nombre_estudiante || "";
+        
         const selectCursos = document.getElementById("curso");
         selectCursos.innerHTML = "";
-        cursos.forEach(curso => {
-          const option = document.createElement("option");
-          option.value = curso;
-          option.textContent = curso;
-          selectCursos.appendChild(option);
+        data.cursos.forEach(c => {
+          let opt = document.createElement("option");
+          opt.value = c; opt.textContent = c;
+          selectCursos.appendChild(opt);
         });
 
         document.getElementById("contenedorCursos").style.display = "block";
-        mensaje.textContent = "¡Programas encontrados! Selecciona uno para continuar.";
+        mensaje.textContent = "Datos recuperados con éxito.";
         mensaje.style.color = "green";
 
-      } catch (error) {
-        mensaje.textContent = "No encontramos programas asociados a ese correo.";
+      } catch (e) {
+        mensaje.textContent = "No se encontraron datos para este correo.";
         mensaje.style.color = "red";
-        document.getElementById("contenedorCursos").style.display = "none";
-      } finally {
-        boton.disabled = false;
-      }
+      } finally { boton.disabled = false; }
     }
 
-    // 2. Validar si el checkbox está marcado
+    // 2. Controlar botón final
     function validarCheckbox() {
       const check = document.getElementById("terminos");
-      const btn = document.getElementById("btnEnviarFinal");
-      btn.disabled = !check.checked;
+      document.getElementById("btnEnviarFinal").disabled = !check.checked;
     }
 
-    // 3. Enviar solicitud final al segundo Webhook
+    // 3. Envío definitivo
     async function enviarSolicitudFinal() {
       const mensaje = document.getElementById("mensaje");
       const btnFinal = document.getElementById("btnEnviarFinal");
-      
+      const nombreFinal = document.getElementById("nombreEdicion").value.trim();
+
+      if (!nombreFinal) {
+        alert("El nombre es obligatorio para el certificado.");
+        return;
+      }
+
       const payload = {
+        nombre_usuario: nombreFinal,
         email: document.getElementById("email").value.trim(),
         tipo_certificado: document.getElementById("tipoCertificado").value,
-        programa_seleccionado: document.getElementById("curso").value,
-        fecha_peticion: new Date().toLocaleString()
+        programa: document.getElementById("curso").value,
+        fecha: new Date().toLocaleString()
       };
 
-      mensaje.textContent = "Enviando solicitud final...";
-      mensaje.style.color = "#704EFD";
+      mensaje.textContent = "Procesando solicitud...";
       btnFinal.disabled = true;
 
       try {
-        const response = await fetch(WEBHOOK_ENVIAR, {
+        const res = await fetch(WEBHOOK_ENVIAR, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
-          mensaje.innerHTML = "<strong>¡Solicitud enviada!</strong><br>Procesaremos tu certificado y te contactaremos por correo.";
+        if (res.ok) {
+          mensaje.innerHTML = "<strong>¡Solicitud enviada!</strong> Te avisaremos por correo.";
           mensaje.style.color = "green";
           document.getElementById("contenedorCursos").style.display = "none";
-        } else {
-          throw new Error();
-        }
-      } catch (error) {
-        mensaje.textContent = "Error al conectar con el servidor. Intenta de nuevo.";
+        } else { throw new Error(); }
+      } catch (e) {
+        mensaje.textContent = "Error al enviar. Intenta de nuevo.";
         mensaje.style.color = "red";
         btnFinal.disabled = false;
       }
