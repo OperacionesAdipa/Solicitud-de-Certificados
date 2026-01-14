@@ -39,12 +39,31 @@
       box-sizing: border-box;
       height: 42px;
     }
+    /* Estilo específico para el checkbox para que no ocupe todo el ancho */
+    .checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .checkbox-container input {
+      width: auto;
+      height: auto;
+      margin-top: 4px;
+    }
+    .checkbox-container label {
+      font-weight: normal;
+      font-size: 13px;
+      margin-top: 0;
+      cursor: pointer;
+    }
     button {
       background-color: #704EFD;
       color: white;
       border: none;
       cursor: pointer;
       margin-top: 20px;
+      font-weight: bold;
     }
     button:disabled {
       background-color: #999;
@@ -63,11 +82,9 @@
   <div class="container">
     <h1>Solicitud de Certificado</h1>
 
-    <!-- CORREO -->
     <label for="email">Correo electrónico</label>
     <input type="email" id="email" placeholder="Ingresa el correo con el cual estás registrado en Adipa" required>
 
-    <!-- TIPO DE CERTIFICADO -->
     <label for="tipoCertificado">Tipo de certificado</label>
     <select id="tipoCertificado" required>
       <option value="">-- Selecciona una opción --</option>
@@ -76,21 +93,28 @@
       <option value="certificado_inscripcion">Certificado de inscripción</option>
     </select>
 
-    <!-- BOTÓN -->
     <button id="btnBuscar" onclick="buscarProgramas()">Buscar mis programas</button>
 
-    <!-- SELECT DE CURSOS -->
-    <div id="contenedorCursos" style="display:none;">
+    <div id="contenedorCursos" style="display:none; margin-top: 25px; border-top: 1px solid #eee; padding-top: 10px;">
       <label for="curso">Programa</label>
       <select id="curso"></select>
+
+      <div class="checkbox-container">
+        <input type="checkbox" id="terminos" onchange="validarCheckbox()">
+        <label for="terminos">Acepto los términos y condiciones para la generación de certificados personalizados.</label>
+      </div>
+
+      <button id="btnEnviarFinal" onclick="enviarSolicitudFinal()" disabled>Enviar solicitud</button>
     </div>
 
     <div class="mensaje" id="mensaje"></div>
   </div>
 
   <script>
-    const WEBHOOK_URL = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
+    const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
+    const WEBHOOK_ENVIAR = "AQUÍ_TU_NUEVA_URL_DE_MAKE"; // <-- REEMPLAZA ESTO
 
+    // Función 1: Buscar programas vinculados al correo
     async function buscarProgramas() {
       const email = document.getElementById("email").value.trim();
       const tipoCertificado = document.getElementById("tipoCertificado").value;
@@ -108,15 +132,10 @@
       boton.disabled = true;
 
       try {
-        const response = await fetch(WEBHOOK_URL, {
+        const response = await fetch(WEBHOOK_BUSCAR, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            email: email,
-            tipo_certificado: tipoCertificado
-          })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, tipo_certificado: tipoCertificado })
         });
 
         const cursos = await response.json();
@@ -127,7 +146,6 @@
 
         const selectCursos = document.getElementById("curso");
         selectCursos.innerHTML = "";
-
         cursos.forEach(curso => {
           const option = document.createElement("option");
           option.value = curso;
@@ -136,15 +154,57 @@
         });
 
         document.getElementById("contenedorCursos").style.display = "block";
-        mensaje.textContent = "Selecciona el programa para continuar.";
+        mensaje.textContent = "Cursos encontrados. Selecciona uno y acepta los términos.";
         mensaje.style.color = "green";
 
       } catch (error) {
-        mensaje.textContent = "Ocurrió un error. Intenta nuevamente.";
+        mensaje.textContent = "No se encontraron programas para este correo.";
         mensaje.style.color = "red";
-        console.error(error);
       } finally {
         boton.disabled = false;
+      }
+    }
+
+    // Función 2: Habilitar el botón final
+    function validarCheckbox() {
+      const checkbox = document.getElementById("terminos");
+      const btnFinal = document.getElementById("btnEnviarFinal");
+      btnFinal.disabled = !checkbox.checked;
+    }
+
+    // Función 3: Enviar la solicitud definitiva
+    async function enviarSolicitudFinal() {
+      const mensaje = document.getElementById("mensaje");
+      const btnFinal = document.getElementById("btnEnviarFinal");
+      
+      const datos = {
+        email: document.getElementById("email").value.trim(),
+        tipo_certificado: document.getElementById("tipoCertificado").value,
+        programa: document.getElementById("curso").value,
+        aceptacion_terminos: true
+      };
+
+      mensaje.textContent = "Procesando tu solicitud...";
+      mensaje.style.color = "black";
+      btnFinal.disabled = true;
+
+      try {
+        const response = await fetch(WEBHOOK_ENVIAR, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datos)
+        });
+
+        if (response.ok) {
+          mensaje.textContent = "¡Solicitud enviada correctamente! Recibirás noticias pronto.";
+          mensaje.style.color = "green";
+        } else {
+          throw new Error();
+        }
+      } catch (error) {
+        mensaje.textContent = "Hubo un error al enviar la solicitud. Intenta más tarde.";
+        mensaje.style.color = "red";
+        btnFinal.disabled = false;
       }
     }
   </script>
