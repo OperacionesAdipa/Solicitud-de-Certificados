@@ -56,28 +56,6 @@
       background-color: #f0edff;
       font-weight: 500;
     }
-    .checkbox-container {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-top: 25px;
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 6px;
-    }
-    .checkbox-container input {
-      width: 18px;
-      height: 18px;
-      margin-top: 2px;
-      cursor: pointer;
-    }
-    .checkbox-container label {
-      font-weight: normal;
-      font-size: 13px;
-      margin-top: 0;
-      line-height: 1.4;
-      cursor: pointer;
-    }
     button {
       background-color: #704EFD;
       color: white;
@@ -151,14 +129,7 @@
       <label for="curso" style="margin-top: 15px;">Selecciona tu Programa</label>
       <select id="curso"></select>
 
-      <div class="checkbox-container">
-        <input type="checkbox" id="terminos" onchange="validarCheckbox()">
-        <label for="terminos">
-          Acepto los términos y condiciones. Confirmo que mi nombre, RUT y programa seleccionados son correctos para la emisión del certificado.
-        </label>
-      </div>
-
-      <button id="btnEnviarFinal" onclick="enviarSolicitudFinal()" disabled>Enviar solicitud</button>
+      <button id="btnEnviarFinal" onclick="enviarSolicitudFinal()">Enviar solicitud</button>
     </div>
 
     <div class="mensaje" id="mensaje"></div>
@@ -205,7 +176,6 @@
 
         if (listaCursos.length === 0) throw new Error();
 
-        // Rellenar Nombre y RUT
         document.getElementById("nombreEdicion").value = data.nombre_estudiante || "";
         document.getElementById("rutEdicion").value = data.rut || "";
         
@@ -229,11 +199,6 @@
         mensaje.textContent = "No se encontraron datos para este correo.";
         mensaje.style.color = "red";
       } finally { boton.disabled = false; }
-    }
-
-    function validarCheckbox() {
-      const check = document.getElementById("terminos");
-      document.getElementById("btnEnviarFinal").disabled = !check.checked;
     }
 
     async function enviarSolicitudFinal() {
