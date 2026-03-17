@@ -54,7 +54,7 @@
       <option value="Certificado de Inscripción">Certificado de Inscripción</option>
     </select>
 
-    <button id="btnBuscar" onclick="buscarProgramas()">1. Buscar programas</button>
+    <button id="btnBuscar" onclick="buscarProgramas()">Buscar programas</button>
 
     <div id="contenedorCursos" style="display:none; margin-top: 25px; border-top: 2px solid #eee; padding-top: 10px;">
       
@@ -67,7 +67,7 @@
       <label for="curso">Selecciona el Programa</label>
       <select id="curso"></select>
 
-      <button id="btnDetalles" onclick="obtenerDetallesPrograma()">2. Cargar datos del programa</button>
+      <button id="btnDetalles" onclick="obtenerDetallesPrograma()">Buscar datos del programa</button>
 
       <div id="detallePrograma" style="display: none;">
         <div class="info-programa-grid">
@@ -89,7 +89,7 @@
           </div>
         </div>
 
-        <button id="btnGenerar" onclick="generarCertificadoFinal()">3. Generar certificado PDF</button>
+        <button id="btnGenerar" onclick="generarCertificadoFinal()">Generar certificado</button>
       </div>
 
       <div id="contenedorMensajeFinal">
@@ -104,7 +104,7 @@
 
   <script>
     const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
-    const WEBHOOK_DETALLES = "https://hook.us2.make.com/s8mg9f4mq5n8p25skgb42cyqcpdsmur4";
+    const WEBHOOK_DETALLES = "https://hook.us2.make.com/ay9xse6yhq7gifuf0smvc7fbub1f7rq1";
     const WEBHOOK_GENERAR = "TU_NUEVO_WEBHOOK_AQUI"; // REEMPLAZA ESTO CON TU WEBHOOK DE GENERACIÓN
 
     async function buscarProgramas() {
