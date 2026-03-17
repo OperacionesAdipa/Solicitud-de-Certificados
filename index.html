@@ -6,35 +6,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    body { font-family: Arial, sans-serif; background: #f7f7f7; padding: 20px; }
+    body { font-family: Arial, sans-serif; background: #f7f7f7; padding: 20px; color: #333; }
     .container { max-width: 620px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     img.logo { width: 160px; display: block; margin: 0 auto 25px; }
     h1 { font-size: 22px; margin-bottom: 25px; text-align: center; color: #333; }
     label { font-weight: bold; margin-top: 18px; display: block; color: #444; }
-    input, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; height: 45px; }
-    input:focus, select:focus { outline: none; border-color: #704EFD; box-shadow: 0 0 5px rgba(112, 78, 253, 0.2); }
-    #nombreEdicion, #rutEdicion { border: 1.5px solid #704EFD; background-color: #f0edff; font-weight: 500; }
+    input, select, button, textarea { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+    input, select { height: 45px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #704EFD; box-shadow: 0 0 5px rgba(112, 78, 253, 0.2); }
     
-    /* Estilos para los nuevos campos de información del programa */
-    .info-programa {
-      background: #fdfbff;
-      border: 1px dashed #704EFD;
-      padding: 15px;
-      margin-top: 20px;
-      border-radius: 8px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .info-item { font-size: 13px; color: #555; }
-    .info-item strong { color: #704EFD; display: block; }
+    .editable-field { border: 1px solid #704EFD; background-color: #faf9ff; font-weight: 500; }
 
-    button { background-color: #704EFD; color: white; border: none; cursor: pointer; margin-top: 20px; font-weight: bold; transition: background 0.3s; }
+    .info-programa-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+      margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;
+    }
+
+    button { background-color: #704EFD; color: white; border: none; cursor: pointer; margin-top: 20px; font-weight: bold; transition: background 0.3s; height: 45px; }
     button:hover:not(:disabled) { background-color: #5a3ecf; }
     button:disabled { background-color: #ccc; cursor: not-allowed; }
+    
+    #btnGenerar { background-color: #25d366; } /* Color verde para el paso final */
+    #btnGenerar:hover { background-color: #1eb956; }
+
     .mensaje { margin-top: 20px; font-size: 14px; text-align: center; font-weight: 500; }
-    .btn-whatsapp { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background-color: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; }
-    .btn-whatsapp img { width: 35px; height: 35px; }
+    
+    #contenedorMensajeFinal { margin-top: 20px; display: none; }
+    textarea { height: 120px; resize: vertical; font-family: inherit; line-height: 1.5; }
   </style>
 </head>
 
@@ -43,150 +41,181 @@
   <img src="https://aula.adipa.cl/pluginfile.php/1/theme_mb2nl/logo/1732710878/LOGOADIPA%202%20%283%29%20%281%29.png" alt="Logo de ADIPA" class="logo">
 
   <div class="container">
-    <h1>Solicitud de Certificado</h1>
+    <h1>Gestión de Certificados</h1>
 
     <label for="email">Correo electrónico</label>
-    <input type="email" id="email" placeholder="Ingresa el correo registrado en Adipa" required>
+    <input type="email" id="email" placeholder="Correo del alumno">
 
     <label for="tipoCertificado">Tipo de certificado</label>
-    <select id="tipoCertificado" required>
+    <select id="tipoCertificado">
       <option value="">-- Selecciona una opción --</option>
-      <option value="certificado_alumno_regular">Certificado de alumno regular</option>
-      <option value="certificado_participacion">Certificado de participación</option>
-      <option value="certificado_inscripcion">Certificado de inscripción</option>
+      <option value="Certificado de Alumno Regular">Certificado de Alumno Regular</option>
+      <option value="Certificado de Participación">Certificado de Participación</option>
+      <option value="Certificado de Inscripción">Certificado de Inscripción</option>
     </select>
 
-    <button id="btnBuscar" onclick="buscarProgramas()">Buscar mis programas</button>
+    <button id="btnBuscar" onclick="buscarProgramas()">1. Buscar programas</button>
 
-    <div id="contenedorCursos" style="display:none; margin-top: 30px; border-top: 2px solid #eee; padding-top: 10px;">
+    <div id="contenedorCursos" style="display:none; margin-top: 25px; border-top: 2px solid #eee; padding-top: 10px;">
       
-      <label for="nombreEdicion">Nombre completo</label>
-      <input type="text" id="nombreEdicion">
+      <label for="nombreEdicion">Nombre en certificado</label>
+      <input type="text" id="nombreEdicion" class="editable-field">
 
-      <label for="rutEdicion" style="margin-top: 15px;">RUT</label>
-      <input type="text" id="rutEdicion">
+      <label for="rutEdicion">RUT</label>
+      <input type="text" id="rutEdicion" class="editable-field">
 
-      <label for="curso" style="margin-top: 15px;">Selecciona tu Programa</label>
+      <label for="curso">Selecciona el Programa</label>
       <select id="curso"></select>
 
-      <button id="btnEnviarFinal" onclick="obtenerDetallesPrograma()">Buscar información del programa</button>
+      <button id="btnDetalles" onclick="obtenerDetallesPrograma()">2. Cargar datos del programa</button>
 
-      <div id="detallePrograma" class="info-programa" style="display: none;">
-        <div class="info-item"><strong>Fecha de inicio:</strong> <span id="fInicio">-</span></div>
-        <div class="info-item"><strong>Fecha de término:</strong> <span id="fTermino">-</span></div>
-        <div class="info-item"><strong>Horas:</strong> <span id="nHoras">-</span></div>
-        <div class="info-item"><strong>Docente:</strong> <span id="nDocente">-</span></div>
+      <div id="detallePrograma" style="display: none;">
+        <div class="info-programa-grid">
+          <div>
+            <label style="margin-top:0; font-size: 12px;">Fecha Inicio</label>
+            <input type="text" id="fInicio" class="editable-field">
+          </div>
+          <div>
+            <label style="margin-top:0; font-size: 12px;">Fecha Término</label>
+            <input type="text" id="fTermino" class="editable-field">
+          </div>
+          <div>
+            <label style="margin-top:0; font-size: 12px;">Horas</label>
+            <input type="text" id="nHoras" class="editable-field">
+          </div>
+          <div>
+            <label style="margin-top:0; font-size: 12px;">Docente</label>
+            <input type="text" id="nDocente" class="editable-field">
+          </div>
+        </div>
+
+        <button id="btnGenerar" onclick="generarCertificadoFinal()">3. Generar certificado PDF</button>
+      </div>
+
+      <div id="contenedorMensajeFinal">
+        <label>Mensaje para el alumno (Editable):</label>
+        <textarea id="textoPersonalizado"></textarea>
+        <p style="font-size: 11px; color: #666; margin-top: 5px;">* El PDF se descargará automáticamente.</p>
       </div>
     </div>
 
     <div class="mensaje" id="mensaje"></div>
   </div>
 
-  <a href="https://api.whatsapp.com/send?phone=56957253424&text=Hola%2C%20necesito%20ayuda%20con%20mi%20certificado" class="btn-whatsapp" target="_blank">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
-  </a>
-
   <script>
     const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
-    const WEBHOOK_DETALLES = "https://hook.us2.make.com/ay9xse6yhq7gifuf0smvc7fbub1f7rq1"; 
+    const WEBHOOK_DETALLES = "https://hook.us2.make.com/s8mg9f4mq5n8p25skgb42cyqcpdsmur4";
+    const WEBHOOK_GENERAR = "TU_NUEVO_WEBHOOK_AQUI"; // REEMPLAZA ESTO CON TU WEBHOOK DE GENERACIÓN
 
     async function buscarProgramas() {
       const email = document.getElementById("email").value.trim();
-      const tipoCertificado = document.getElementById("tipoCertificado").value;
+      const tipo = document.getElementById("tipoCertificado").value;
       const mensaje = document.getElementById("mensaje");
-      const boton = document.getElementById("btnBuscar");
+      const btn = document.getElementById("btnBuscar");
 
-      if (!email || !tipoCertificado) {
-        mensaje.textContent = "Por favor, completa el correo y el tipo de certificado.";
-        mensaje.style.color = "red";
-        return;
-      }
-
-      mensaje.textContent = "Buscando tus inscripciones...";
-      mensaje.style.color = "#666";
-      boton.disabled = true;
+      if (!email || !tipo) { alert("Completa correo y tipo."); return; }
+      
+      mensaje.textContent = "Buscando...";
+      btn.disabled = true;
 
       try {
-        const response = await fetch(WEBHOOK_BUSCAR, {
+        const res = await fetch(WEBHOOK_BUSCAR, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email, tipo_certificado: tipoCertificado })
+          body: JSON.stringify({ email, tipo_certificado: tipo })
         });
-
-        const data = await response.json(); 
-        let listaCursos = [];
-        if (data.cursos) {
-            listaCursos = Array.isArray(data.cursos) ? data.cursos : data.cursos.split(',').map(c => c.trim().replace(/[\[\]"']/g, ""));
-        }
-
-        if (listaCursos.length === 0) throw new Error();
-
+        const data = await res.json();
+        let cursos = Array.isArray(data.cursos) ? data.cursos : (data.cursos ? data.cursos.split(',') : []);
+        
         document.getElementById("nombreEdicion").value = data.nombre_estudiante || "";
         document.getElementById("rutEdicion").value = data.rut || "";
         
-        const selectCursos = document.getElementById("curso");
-        selectCursos.innerHTML = "";
-        listaCursos.forEach(c => {
-          if(c) {
-            let opt = document.createElement("option");
-            opt.value = c; opt.textContent = c;
-            selectCursos.appendChild(opt);
-          }
+        const select = document.getElementById("curso");
+        select.innerHTML = "";
+        cursos.forEach(c => {
+          let opt = document.createElement("option");
+          opt.value = c; opt.textContent = c;
+          select.appendChild(opt);
         });
 
         document.getElementById("contenedorCursos").style.display = "block";
-        mensaje.textContent = "¡Programas encontrados!";
-        mensaje.style.color = "green";
-
-      } catch (e) {
-        mensaje.textContent = "No se encontraron datos.";
-        mensaje.style.color = "red";
-      } finally { boton.disabled = false; }
+        mensaje.textContent = "";
+      } catch (e) { mensaje.textContent = "No se encontraron datos."; }
+      finally { btn.disabled = false; }
     }
 
-    // NUEVA FUNCIÓN QUE ACTIVA EL SEGUNDO WEBHOOK Y RECIBE DATOS
     async function obtenerDetallesPrograma() {
-      const mensaje = document.getElementById("mensaje");
-      const btnFinal = document.getElementById("btnEnviarFinal");
-      
-      const payload = {
-        nombre_usuario: document.getElementById("nombreEdicion").value.trim(),
-        rut_usuario: document.getElementById("rutEdicion").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        tipo_certificado: document.getElementById("tipoCertificado").value,
-        programa: document.getElementById("curso").value
-      };
-
-      mensaje.textContent = "Obteniendo información técnica del programa...";
-      btnFinal.disabled = true;
+      const btn = document.getElementById("btnDetalles");
+      btn.disabled = true;
 
       try {
         const res = await fetch(WEBHOOK_DETALLES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            programa: document.getElementById("curso").value,
+            email: document.getElementById("email").value
+          })
+        });
+        const info = await res.json();
+        
+        document.getElementById("fInicio").value = info.fecha_inicio || "";
+        document.getElementById("fTermino").value = info.fecha_termino || "";
+        document.getElementById("nHoras").value = info.horas || "";
+        document.getElementById("nDocente").value = info.docente || "";
+
+        document.getElementById("detallePrograma").style.display = "block";
+      } catch (e) { alert("Error al cargar detalles."); }
+      finally { btn.disabled = false; }
+    }
+
+    async function generarCertificadoFinal() {
+      const btn = document.getElementById("btnGenerar");
+      const mensaje = document.getElementById("mensaje");
+      
+      const datosFinales = {
+        nombre: document.getElementById("nombreEdicion").value,
+        rut: document.getElementById("rutEdicion").value,
+        email: document.getElementById("email").value,
+        tipo: document.getElementById("tipoCertificado").value,
+        programa: document.getElementById("curso").value,
+        fecha_inicio: document.getElementById("fInicio").value,
+        fecha_termino: document.getElementById("fTermino").value,
+        horas: document.getElementById("nHoras").value,
+        docente: document.getElementById("nDocente").value
+      };
+
+      mensaje.textContent = "Generando PDF y preparando mensaje...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(WEBHOOK_GENERAR, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datosFinales)
         });
 
         if (res.ok) {
-          const info = await res.json();
+          const respuesta = await res.json();
           
-          // RELLENAMOS LOS CAMPOS CON LA INFORMACIÓN QUE VIENE DESDE MAKE
-          document.getElementById("fInicio").textContent = info.fecha_inicio || "No disponible";
-          document.getElementById("fTermino").textContent = info.fecha_termino || "No disponible";
-          document.getElementById("nHoras").textContent = info.horas || "No disponible";
-          document.getElementById("nDocente").textContent = info.docente || "No disponible";
+          // 1. Manejar la descarga del PDF (Asumiendo que envías una URL)
+          if(respuesta.url_pdf) {
+            const link = document.createElement('a');
+            link.href = respuesta.url_pdf;
+            link.download = `Certificado_${datosFinales.nombre}.pdf`;
+            link.click();
+          }
 
-          // MOSTRAMOS EL CUADRO DE INFORMACIÓN
-          document.getElementById("detallePrograma").style.display = "grid";
-          mensaje.textContent = "Información actualizada correctamente.";
+          // 2. Mostrar el mensaje personalizado
+          document.getElementById("textoPersonalizado").value = respuesta.mensaje_texto || "Aquí tienes tu certificado.";
+          document.getElementById("contenedorMensajeFinal").style.display = "block";
+          mensaje.textContent = "¡Certificado generado con éxito!";
           mensaje.style.color = "green";
-        } else { throw new Error(); }
+        }
       } catch (e) {
-        mensaje.textContent = "Error al conectar con el servidor.";
+        mensaje.textContent = "Error en la generación final.";
         mensaje.style.color = "red";
-      } finally {
-        btnFinal.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     }
   </script>
 </body>
