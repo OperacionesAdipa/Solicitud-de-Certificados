@@ -6,94 +6,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      padding: 20px;
-    }
-    .container {
-      max-width: 620px;
-      margin: auto;
-      background: #ffffff;
-      padding: 30px;
+    body { font-family: Arial, sans-serif; background: #f7f7f7; padding: 20px; }
+    .container { max-width: 620px; margin: auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    img.logo { width: 160px; display: block; margin: 0 auto 25px; }
+    h1 { font-size: 22px; margin-bottom: 25px; text-align: center; color: #333; }
+    label { font-weight: bold; margin-top: 18px; display: block; color: #444; }
+    input, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; height: 45px; }
+    input:focus, select:focus { outline: none; border-color: #704EFD; box-shadow: 0 0 5px rgba(112, 78, 253, 0.2); }
+    #nombreEdicion, #rutEdicion { border: 1.5px solid #704EFD; background-color: #f0edff; font-weight: 500; }
+    
+    /* Estilos para los nuevos campos de información del programa */
+    .info-programa {
+      background: #fdfbff;
+      border: 1px dashed #704EFD;
+      padding: 15px;
+      margin-top: 20px;
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
-    img.logo {
-      width: 160px;
-      display: block;
-      margin: 0 auto 25px;
-    }
-    h1 {
-      font-size: 22px;
-      margin-bottom: 25px;
-      text-align: center;
-      color: #333;
-    }
-    label {
-      font-weight: bold;
-      margin-top: 18px;
-      display: block;
-      color: #444;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      box-sizing: border-box;
-      height: 45px;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #704EFD;
-      box-shadow: 0 0 5px rgba(112, 78, 253, 0.2);
-    }
-    #nombreEdicion, #rutEdicion {
-      border: 1.5px solid #704EFD;
-      background-color: #f0edff;
-      font-weight: 500;
-    }
-    button {
-      background-color: #704EFD;
-      color: white;
-      border: none;
-      cursor: pointer;
-      margin-top: 20px;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-    button:hover:not(:disabled) {
-      background-color: #5a3ecf;
-    }
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    .mensaje {
-      margin-top: 20px;
-      font-size: 14px;
-      text-align: center;
-      font-weight: 500;
-    }
-    .btn-whatsapp {
-      position: fixed;
-      bottom: 25px;
-      right: 25px;
-      width: 60px;
-      height: 60px;
-      background-color: #25d366;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 9999;
-      transition: transform 0.3s ease;
-    }
-    .btn-whatsapp:hover { transform: scale(1.1); }
+    .info-item { font-size: 13px; color: #555; }
+    .info-item strong { color: #704EFD; display: block; }
+
+    button { background-color: #704EFD; color: white; border: none; cursor: pointer; margin-top: 20px; font-weight: bold; transition: background 0.3s; }
+    button:hover:not(:disabled) { background-color: #5a3ecf; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
+    .mensaje { margin-top: 20px; font-size: 14px; text-align: center; font-weight: 500; }
+    .btn-whatsapp { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background-color: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; }
     .btn-whatsapp img { width: 35px; height: 35px; }
   </style>
 </head>
@@ -120,29 +60,35 @@
 
     <div id="contenedorCursos" style="display:none; margin-top: 30px; border-top: 2px solid #eee; padding-top: 10px;">
       
-      <label for="nombreEdicion">Nombre completo (Verifica o edita para tu certificado)</label>
-      <input type="text" id="nombreEdicion" placeholder="Tu nombre completo">
+      <label for="nombreEdicion">Nombre completo</label>
+      <input type="text" id="nombreEdicion">
 
-      <label for="rutEdicion" style="margin-top: 15px;">RUT (Verifica o edita para tu certificado)</label>
-      <input type="text" id="rutEdicion" placeholder="Tu RUT">
+      <label for="rutEdicion" style="margin-top: 15px;">RUT</label>
+      <input type="text" id="rutEdicion">
 
       <label for="curso" style="margin-top: 15px;">Selecciona tu Programa</label>
       <select id="curso"></select>
 
-      <button id="btnEnviarFinal" onclick="enviarSolicitudFinal()">Buscar información del programa</button>
+      <button id="btnEnviarFinal" onclick="obtenerDetallesPrograma()">Buscar información del programa</button>
+
+      <div id="detallePrograma" class="info-programa" style="display: none;">
+        <div class="info-item"><strong>Fecha de inicio:</strong> <span id="fInicio">-</span></div>
+        <div class="info-item"><strong>Fecha de término:</strong> <span id="fTermino">-</span></div>
+        <div class="info-item"><strong>Horas:</strong> <span id="nHoras">-</span></div>
+        <div class="info-item"><strong>Docente:</strong> <span id="nDocente">-</span></div>
+      </div>
     </div>
 
     <div class="mensaje" id="mensaje"></div>
   </div>
 
-  <a href="https://api.whatsapp.com/send?phone=56957253424&text=Hola%2C%20necesito%20ayuda%20con%20mi%20certificado%20personalizado" 
-     class="btn-whatsapp" target="_blank">
+  <a href="https://api.whatsapp.com/send?phone=56957253424&text=Hola%2C%20necesito%20ayuda%20con%20mi%20certificado" class="btn-whatsapp" target="_blank">
     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
   </a>
 
   <script>
     const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
-    const WEBHOOK_ENVIAR = "https://hook.us2.make.com/s8mg9f4mq5n8p25skgb42cyqcpdsmur4"; 
+    const WEBHOOK_DETALLES = "https://hook.us2.make.com/s8mg9f4mq5n8p25skgb42cyqcpdsmur4"; 
 
     async function buscarProgramas() {
       const email = document.getElementById("email").value.trim();
@@ -168,7 +114,6 @@
         });
 
         const data = await response.json(); 
-
         let listaCursos = [];
         if (data.cursos) {
             listaCursos = Array.isArray(data.cursos) ? data.cursos : data.cursos.split(',').map(c => c.trim().replace(/[\[\]"']/g, ""));
@@ -181,64 +126,65 @@
         
         const selectCursos = document.getElementById("curso");
         selectCursos.innerHTML = "";
-        
         listaCursos.forEach(c => {
           if(c) {
             let opt = document.createElement("option");
-            opt.value = c; 
-            opt.textContent = c;
+            opt.value = c; opt.textContent = c;
             selectCursos.appendChild(opt);
           }
         });
 
         document.getElementById("contenedorCursos").style.display = "block";
-        mensaje.textContent = "¡Programas encontrados! Selecciona uno para continuar.";
+        mensaje.textContent = "¡Programas encontrados!";
         mensaje.style.color = "green";
 
       } catch (e) {
-        mensaje.textContent = "No se encontraron datos para este correo.";
+        mensaje.textContent = "No se encontraron datos.";
         mensaje.style.color = "red";
       } finally { boton.disabled = false; }
     }
 
-    async function enviarSolicitudFinal() {
+    // NUEVA FUNCIÓN QUE ACTIVA EL SEGUNDO WEBHOOK Y RECIBE DATOS
+    async function obtenerDetallesPrograma() {
       const mensaje = document.getElementById("mensaje");
       const btnFinal = document.getElementById("btnEnviarFinal");
-      const nombreFinal = document.getElementById("nombreEdicion").value.trim();
-      const rutFinal = document.getElementById("rutEdicion").value.trim();
-
-      if (!nombreFinal || !rutFinal) {
-        alert("El nombre y el RUT son obligatorios para el certificado.");
-        return;
-      }
-
+      
       const payload = {
-        nombre_usuario: nombreFinal,
-        rut_usuario: rutFinal,
+        nombre_usuario: document.getElementById("nombreEdicion").value.trim(),
+        rut_usuario: document.getElementById("rutEdicion").value.trim(),
         email: document.getElementById("email").value.trim(),
         tipo_certificado: document.getElementById("tipoCertificado").value,
-        programa: document.getElementById("curso").value,
-        fecha: new Date().toLocaleString()
+        programa: document.getElementById("curso").value
       };
 
-      mensaje.textContent = "Procesando solicitud...";
+      mensaje.textContent = "Obteniendo información técnica del programa...";
       btnFinal.disabled = true;
 
       try {
-        const res = await fetch(WEBHOOK_ENVIAR, {
+        const res = await fetch(WEBHOOK_DETALLES, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
 
         if (res.ok) {
-          mensaje.innerHTML = "<strong>¡Solicitud enviada!</strong> <br>Procesaremos tu certificado y te contactaremos por correo.";
+          const info = await res.json();
+          
+          // RELLENAMOS LOS CAMPOS CON LA INFORMACIÓN QUE VIENE DESDE MAKE
+          document.getElementById("fInicio").textContent = info.fecha_inicio || "No disponible";
+          document.getElementById("fTermino").textContent = info.fecha_termino || "No disponible";
+          document.getElementById("nHoras").textContent = info.horas || "No disponible";
+          document.getElementById("nDocente").textContent = info.docente || "No disponible";
+
+          // MOSTRAMOS EL CUADRO DE INFORMACIÓN
+          document.getElementById("detallePrograma").style.display = "grid";
+          mensaje.textContent = "Información actualizada correctamente.";
           mensaje.style.color = "green";
-          document.getElementById("contenedorCursos").style.display = "none";
         } else { throw new Error(); }
       } catch (e) {
-        mensaje.textContent = "Error al enviar. Intenta de nuevo.";
+        mensaje.textContent = "Error al conectar con el servidor.";
         mensaje.style.color = "red";
+      } finally {
         btnFinal.disabled = false;
       }
     }
