@@ -26,17 +26,19 @@
     button:hover:not(:disabled) { background-color: #5a3ecf; }
     button:disabled { background-color: #ccc; cursor: not-allowed; }
     
-    #btnGenerar { background-color: #25d366; }
-    #btnGenerar:hover { background-color: #1eb956; }
+    #btnGenerar { background-color: #704EFD; }
+    
+    /* Botón de descarga final */
+    #btnDescargarPDF { background-color: #25d366; display: none; margin-top: 15px; }
+    #btnDescargarPDF:hover { background-color: #1eb956; }
 
     .btn-secundario { background-color: #666; margin-top: 10px; }
     .btn-reset { background-color: #f1f1f1; color: #333; border: 1px solid #ccc; margin-top: 30px; }
-    .btn-reset:hover { background-color: #e2e2e2; }
 
     .mensaje { margin-top: 20px; font-size: 14px; text-align: center; font-weight: 500; }
     
     #contenedorMensajeFinal { margin-top: 25px; display: none; border-top: 2px dashed #704EFD; padding-top: 20px; }
-    textarea { height: 120px; resize: vertical; font-family: inherit; line-height: 1.5; background: #fff; }
+    textarea { height: 120px; resize: vertical; font-family: inherit; line-height: 1.5; }
   </style>
 </head>
 
@@ -77,31 +79,21 @@
 
       <div id="detallePrograma" style="display: none;">
         <div class="info-programa-grid">
-          <div>
-            <label style="margin-top:0; font-size: 12px;">Fecha Inicio</label>
-            <input type="text" id="fInicio" class="editable-field">
-          </div>
-          <div>
-            <label style="margin-top:0; font-size: 12px;">Fecha Término</label>
-            <input type="text" id="fTermino" class="editable-field">
-          </div>
-          <div>
-            <label style="margin-top:0; font-size: 12px;">Horas</label>
-            <input type="text" id="nHoras" class="editable-field">
-          </div>
-          <div>
-            <label style="margin-top:0; font-size: 12px;">Docente</label>
-            <input type="text" id="nDocente" class="editable-field">
-          </div>
+          <div><label style="font-size: 12px;">Fecha Inicio</label><input type="text" id="fInicio" class="editable-field"></div>
+          <div><label style="font-size: 12px;">Fecha Término</label><input type="text" id="fTermino" class="editable-field"></div>
+          <div><label style="font-size: 12px;">Horas</label><input type="text" id="nHoras" class="editable-field"></div>
+          <div><label style="font-size: 12px;">Docente</label><input type="text" id="nDocente" class="editable-field"></div>
         </div>
 
         <button id="btnGenerar" onclick="generarCertificadoFinal()">Generar certificado</button>
       </div>
 
       <div id="contenedorMensajeFinal">
-        <label>Mensaje para el alumno:</label>
+        <button id="btnDescargarPDF" onclick="descargarArchivo()">⬇ Descargar Certificado PDF</button>
+
+        <label style="margin-top:20px;">Mensaje para el alumno:</label>
         <textarea id="textoPersonalizado"></textarea>
-        <button class="btn-secundario" onclick="copiarTexto()">Copiar mensaje al portapapeles</button>
+        <button class="btn-secundario" onclick="copiarTexto()">Copiar mensaje</button>
         
         <button class="btn-reset" onclick="nuevaSolicitud()">↺ Iniciar nueva solicitud</button>
       </div>
@@ -114,6 +106,8 @@
     const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
     const WEBHOOK_DETALLES = "https://hook.us2.make.com/ay9xse6yhq7gifuf0smvc7fbub1f7rq1";
     const WEBHOOK_GENERAR = "https://hook.us2.make.com/2fappqnu386930rkwkxas6dg8bhnpesl"; 
+
+    let urlDescargaGlobal = ""; // Para guardar la URL que venga de Make
 
     async function buscarProgramas() {
       const email = document.getElementById("email").value.trim();
@@ -205,14 +199,14 @@
         if (res.ok) {
           const respuesta = await res.json();
           
-          // CAMBIO: AHORA SE ABRE EN PESTAÑA NUEVA
           if(respuesta.url_pdf) {
-            window.open(respuesta.url_pdf, '_blank');
+            urlDescargaGlobal = respuesta.url_pdf;
+            document.getElementById("btnDescargarPDF").style.display = "block";
           }
 
           document.getElementById("textoPersonalizado").value = respuesta.mensaje_texto || "Certificado listo.";
           document.getElementById("contenedorMensajeFinal").style.display = "block";
-          mensaje.textContent = "¡Certificado generado! El PDF se abrió en una nueva pestaña.";
+          mensaje.textContent = "¡Certificado listo para descargar!";
           mensaje.style.color = "green";
         }
       } catch (e) {
@@ -221,16 +215,28 @@
       } finally { btn.disabled = false; }
     }
 
+    function descargarArchivo() {
+      if(urlDescargaGlobal !== "") {
+        const nombreSugerido = document.getElementById("nombreEdicion").value || "Certificado";
+        const link = document.createElement('a');
+        link.href = urlDescargaGlobal;
+        link.target = "_blank";
+        link.download = `Certificado_${nombreSugerido}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
     function copiarTexto() {
       const texto = document.getElementById("textoPersonalizado");
       texto.select();
-      document.execCommand("copy"); // Compatible con navegadores antiguos
-      navigator.clipboard.writeText(texto.value); // API moderna
-      alert("¡Mensaje copiado al portapapeles!");
+      navigator.clipboard.writeText(texto.value);
+      alert("¡Mensaje copiado!");
     }
 
     function nuevaSolicitud() {
-      if(confirm("¿Estás seguro de que quieres iniciar una nueva solicitud? Se borrarán los datos actuales.")) {
+      if(confirm("¿Reiniciar el formulario?")) {
         location.reload();
       }
     }
