@@ -15,7 +15,7 @@
     input, select { height: 45px; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: #704EFD; box-shadow: 0 0 5px rgba(112, 78, 253, 0.2); }
     
-    .editable-field { border: 1px solid #704EFD; background-color: #faf9ff; font-weight: 500; }
+    .editable-field { border: 1.5px solid #704EFD; background-color: #faf9ff; font-weight: 500; }
 
     .info-programa-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
@@ -26,13 +26,17 @@
     button:hover:not(:disabled) { background-color: #5a3ecf; }
     button:disabled { background-color: #ccc; cursor: not-allowed; }
     
-    #btnGenerar { background-color: #25d366; } /* Color verde para el paso final */
+    #btnGenerar { background-color: #25d366; }
     #btnGenerar:hover { background-color: #1eb956; }
+
+    .btn-secundario { background-color: #666; margin-top: 10px; }
+    .btn-reset { background-color: #f1f1f1; color: #333; border: 1px solid #ccc; margin-top: 30px; }
+    .btn-reset:hover { background-color: #e2e2e2; }
 
     .mensaje { margin-top: 20px; font-size: 14px; text-align: center; font-weight: 500; }
     
-    #contenedorMensajeFinal { margin-top: 20px; display: none; }
-    textarea { height: 120px; resize: vertical; font-family: inherit; line-height: 1.5; }
+    #contenedorMensajeFinal { margin-top: 25px; display: none; border-top: 2px dashed #704EFD; padding-top: 20px; }
+    textarea { height: 120px; resize: vertical; font-family: inherit; line-height: 1.5; background: #fff; }
   </style>
 </head>
 
@@ -43,18 +47,20 @@
   <div class="container">
     <h1>Gestión de Certificados</h1>
 
-    <label for="email">Correo electrónico</label>
-    <input type="email" id="email" placeholder="Correo del alumno">
+    <div id="formularioInicial">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" placeholder="Correo del alumno">
 
-    <label for="tipoCertificado">Tipo de certificado</label>
-    <select id="tipoCertificado">
-      <option value="">-- Selecciona una opción --</option>
-      <option value="Certificado de Alumno Regular">Certificado de Alumno Regular</option>
-      <option value="Certificado de Participación">Certificado de Participación</option>
-      <option value="Certificado de Inscripción">Certificado de Inscripción</option>
-    </select>
+      <label for="tipoCertificado">Tipo de certificado</label>
+      <select id="tipoCertificado">
+        <option value="">-- Selecciona una opción --</option>
+        <option value="Certificado de Alumno Regular">Certificado de Alumno Regular</option>
+        <option value="Certificado de Participación">Certificado de Participación</option>
+        <option value="Certificado de Inscripción">Certificado de Inscripción</option>
+      </select>
 
-    <button id="btnBuscar" onclick="buscarProgramas()">Buscar programas</button>
+      <button id="btnBuscar" onclick="buscarProgramas()">1. Buscar programas</button>
+    </div>
 
     <div id="contenedorCursos" style="display:none; margin-top: 25px; border-top: 2px solid #eee; padding-top: 10px;">
       
@@ -67,7 +73,7 @@
       <label for="curso">Selecciona el Programa</label>
       <select id="curso"></select>
 
-      <button id="btnDetalles" onclick="obtenerDetallesPrograma()">Buscar datos del programa</button>
+      <button id="btnDetalles" onclick="obtenerDetallesPrograma()">2. Cargar datos del programa</button>
 
       <div id="detallePrograma" style="display: none;">
         <div class="info-programa-grid">
@@ -89,13 +95,15 @@
           </div>
         </div>
 
-        <button id="btnGenerar" onclick="generarCertificadoFinal()">Generar certificado</button>
+        <button id="btnGenerar" onclick="generarCertificadoFinal()">3. Generar certificado PDF</button>
       </div>
 
       <div id="contenedorMensajeFinal">
-        <label>Mensaje para el alumno (Editable):</label>
+        <label>Mensaje para el alumno:</label>
         <textarea id="textoPersonalizado"></textarea>
-        <p style="font-size: 11px; color: #666; margin-top: 5px;">* El PDF se descargará automáticamente.</p>
+        <button class="btn-secundario" onclick="copiarTexto()">Copiar mensaje al portapapeles</button>
+        
+        <button class="btn-reset" onclick="nuevaSolicitud()">↺ Iniciar nueva solicitud</button>
       </div>
     </div>
 
@@ -104,8 +112,8 @@
 
   <script>
     const WEBHOOK_BUSCAR = "https://hook.us2.make.com/a8ja8l2g1oo7qsrjr5xqo3n4bacj8bf3";
-    const WEBHOOK_DETALLES = "https://hook.us2.make.com/ay9xse6yhq7gifuf0smvc7fbub1f7rq1";
-    const WEBHOOK_GENERAR = "https://hook.us2.make.com/2fappqnu386930rkwkxas6dg8bhnpesl";
+    const WEBHOOK_DETALLES = "https://hook.us2.make.com/s8mg9f4mq5n8p25skgb42cyqcpdsmur4";
+    const WEBHOOK_GENERAR = "TU_NUEVO_WEBHOOK_AQUI"; 
 
     async function buscarProgramas() {
       const email = document.getElementById("email").value.trim();
@@ -114,7 +122,6 @@
       const btn = document.getElementById("btnBuscar");
 
       if (!email || !tipo) { alert("Completa correo y tipo."); return; }
-      
       mensaje.textContent = "Buscando...";
       btn.disabled = true;
 
@@ -140,7 +147,7 @@
 
         document.getElementById("contenedorCursos").style.display = "block";
         mensaje.textContent = "";
-      } catch (e) { mensaje.textContent = "No se encontraron datos."; }
+      } catch (e) { mensaje.textContent = "Error al buscar datos."; }
       finally { btn.disabled = false; }
     }
 
@@ -185,7 +192,7 @@
         docente: document.getElementById("nDocente").value
       };
 
-      mensaje.textContent = "Generando PDF y preparando mensaje...";
+      mensaje.textContent = "Procesando certificado...";
       btn.disabled = true;
 
       try {
@@ -198,24 +205,34 @@
         if (res.ok) {
           const respuesta = await res.json();
           
-          // 1. Manejar la descarga del PDF (Asumiendo que envías una URL)
+          // CAMBIO: AHORA SE ABRE EN PESTAÑA NUEVA
           if(respuesta.url_pdf) {
-            const link = document.createElement('a');
-            link.href = respuesta.url_pdf;
-            link.download = `Certificado_${datosFinales.nombre}.pdf`;
-            link.click();
+            window.open(respuesta.url_pdf, '_blank');
           }
 
-          // 2. Mostrar el mensaje personalizado
-          document.getElementById("textoPersonalizado").value = respuesta.mensaje_texto || "Aquí tienes tu certificado.";
+          document.getElementById("textoPersonalizado").value = respuesta.mensaje_texto || "Certificado listo.";
           document.getElementById("contenedorMensajeFinal").style.display = "block";
-          mensaje.textContent = "¡Certificado generado con éxito!";
+          mensaje.textContent = "¡Certificado generado! El PDF se abrió en una nueva pestaña.";
           mensaje.style.color = "green";
         }
       } catch (e) {
-        mensaje.textContent = "Error en la generación final.";
+        mensaje.textContent = "Error en el paso final.";
         mensaje.style.color = "red";
       } finally { btn.disabled = false; }
+    }
+
+    function copiarTexto() {
+      const texto = document.getElementById("textoPersonalizado");
+      texto.select();
+      document.execCommand("copy"); // Compatible con navegadores antiguos
+      navigator.clipboard.writeText(texto.value); // API moderna
+      alert("¡Mensaje copiado al portapapeles!");
+    }
+
+    function nuevaSolicitud() {
+      if(confirm("¿Estás seguro de que quieres iniciar una nueva solicitud? Se borrarán los datos actuales.")) {
+        location.reload();
+      }
     }
   </script>
 </body>
